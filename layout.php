@@ -1,9 +1,9 @@
 <?php
 $page = isset($_GET['page']) ? $_GET['page'] : 'dashboard';
-$validPages = ['dashboard', 'analytics', 'market', 'forecast', 'about', 'map', 'harvest', 'settings', 'crops', 'tasks'];
+$validPages = ['dashboard', 'login'];
 
 // Add your task step pages to the whitelist
-$taskStepPages = ['cleaning_task', 'review_task', 'assign_farmer', 'planting_task', 'harvest_task', 'fertilizing_task', 'default_task' , 'pest_control'];
+$taskStepPages = [];
 
 if (!in_array($page, array_merge($validPages, $taskStepPages))) {
     $page = 'dashboard';
@@ -14,16 +14,11 @@ if (!in_array($page, array_merge($validPages, $taskStepPages))) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agrilink Smart System</title>
+    <title>NUTRI-GUARD</title>
 
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet" />
 
-    <!-- Bootstrap 5 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-
-    <!-- Bootstrap Icons -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
 
     <!-- ✅ Custom CSS -->
     <style>
@@ -59,10 +54,17 @@ if (!in_array($page, array_merge($validPages, $taskStepPages))) {
             flex-direction: column;
             z-index: 9999;
         }
-        #page-loader .spinner-border {
+        .spinner {
             width: 3rem;
             height: 3rem;
+            border: 4px solid rgba(16,185,129,0.18);
+            border-top-color: #10b981;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
         }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
         #page-loader p {
             margin-top: 10px;
             color: #10b981;
@@ -73,32 +75,55 @@ if (!in_array($page, array_merge($validPages, $taskStepPages))) {
 <body>
 
 <div class="layout-wrapper">
-    <?php include 'includes/navbar.php'; ?>
+    <?php
+    $navbarInclude = file_exists(__DIR__ . '/components/navbar.php')
+        ? __DIR__ . '/components/navbar.php'
+        : __DIR__ . '/includes/navbar.php';
+
+    if (file_exists($navbarInclude)) {
+        include $navbarInclude;
+    }
+    ?>
 
     <div class="main-content">
-        <?php include 'includes/header.php'; ?>
+        <?php
+        $headerInclude = file_exists(__DIR__ . '/components/header.php')
+            ? __DIR__ . '/components/header.php'
+            : __DIR__ . '/includes/header.php';
+
+        if (file_exists($headerInclude)) {
+            include $headerInclude;
+        }
+        ?>
 
         <!-- ✅ Page Loader -->
         <div id="page-loader">
-            <div class="spinner-border text-success" role="status">
-                <span class="visually-hidden">Loading...</span>
-            </div>
+            <div class="spinner" aria-hidden="true"></div>
             <p>Loading, please wait...</p>
         </div>
 
         <!-- ✅ Page Content -->
         <main>
             <?php
-            // Support both normal and task_steps pages
-            $mainPath = "pages/{$page}.php";
-            $subPath = "pages/task_steps/{$page}.php";
+            // Use absolute paths to avoid include warnings from working-directory issues.
+            $mainPath = __DIR__ . "/pages/{$page}.php";
+            $subPath = __DIR__ . "/pages/task_steps/{$page}.php";
+            $rootPath = __DIR__ . "/{$page}.php";
+            $dashboardPath = __DIR__ . "/pages/dashboard.php";
 
-            if (file_exists($mainPath)) {
+            if (is_file($mainPath)) {
                 include $mainPath;
-            } elseif (file_exists($subPath)) {
+            } elseif (is_file($subPath)) {
                 include $subPath;
+            } elseif (is_file($rootPath) && basename($rootPath) !== 'layout.php') {
+                include $rootPath;
+            } elseif (is_file($dashboardPath)) {
+                include $dashboardPath;
             } else {
-                include "pages/dashboard.php"; // fallback
+                echo '<div style="padding:16px;border:1px solid #e5e7eb;border-radius:10px;background:#fff">';
+                echo '<h2 style="margin:0 0 8px 0;font-size:20px;color:#111827">No page found</h2>';
+                echo '<p style="margin:0;color:#4b5563">Create `pages/dashboard.php` or add a page file under `pages/`.</p>';
+                echo '</div>';
             }
             ?>
         </main>
@@ -106,36 +131,7 @@ if (!in_array($page, array_merge($validPages, $taskStepPages))) {
 </div>
 
 <!-- ✅ Scripts -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-
-<!-- ✅ Optional JS per-page -->
-<?php if ($page === 'dashboard'): ?>
-<script src="assets/js/dashboard.js"></script>
-<script> if (typeof dashboardInit === "function") dashboardInit(); </script>
-
-<?php elseif ($page === 'analytics'): ?>
-<script src="assets/js/analytics.js"></script>
-<script> if (typeof analyticsInit === "function") analyticsInit(); </script>
-
-<?php elseif ($page === 'tasks'): ?>
-<script src="assets/js/tasks.js"></script>
-<script> if (typeof tasksInit === "function") tasksInit(); </script>
-
-<?php elseif ($page === 'map'): ?>
-<script src="assets/js/map.js"></script>
-<script> if (typeof mapInit === "function") mapInit(); </script>
-
-<?php elseif ($page === 'harvest'): ?>
-<script src="assets/js/harvest.js"></script>
-<script> if (typeof harvestInit === "function") harvestInit(); </script>
-
-
-<?php elseif ($page === 'crops'): ?>
-<script src="assets/js/crops.js"></script>
-<script> if (typeof cropsInit === "function") cropsInit(); </script>
-
-<?php endif; ?>
 
 </body>
 </html>
