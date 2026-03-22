@@ -2,10 +2,22 @@
 $page = isset($_GET['page']) ? $_GET['page'] : 'dashboard';
 $validPages = ['dashboard', 'login'];
 
+$bnsPages = [];
+$bnsPageFiles = glob(__DIR__ . '/pages/bns/*.php') ?: [];
+foreach ($bnsPageFiles as $file) {
+    $bnsPages[] = pathinfo($file, PATHINFO_FILENAME);
+}
+
+$topLevelPages = [];
+$topLevelPageFiles = glob(__DIR__ . '/pages/*.php') ?: [];
+foreach ($topLevelPageFiles as $file) {
+    $topLevelPages[] = pathinfo($file, PATHINFO_FILENAME);
+}
+
 // Add your task step pages to the whitelist
 $taskStepPages = [];
 
-if (!in_array($page, array_merge($validPages, $taskStepPages))) {
+if (!in_array($page, array_merge($validPages, $taskStepPages, $bnsPages, $topLevelPages), true)) {
     $page = 'dashboard';
 }
 ?>
@@ -106,23 +118,34 @@ if (!in_array($page, array_merge($validPages, $taskStepPages))) {
         <main>
             <?php
             // Use absolute paths to avoid include warnings from working-directory issues.
-            $mainPath = __DIR__ . "/pages/{$page}.php";
-            $subPath = __DIR__ . "/pages/task_steps/{$page}.php";
-            $rootPath = __DIR__ . "/{$page}.php";
-            $dashboardPath = __DIR__ . "/pages/dashboard.php";
+            $candidatePaths = [
+                __DIR__ . "/pages/{$page}.php",
+                __DIR__ . "/pages/bns/{$page}.php",
+                __DIR__ . "/pages/task_steps/{$page}.php",
+                __DIR__ . "/{$page}.php",
+                __DIR__ . "/pages/bns/dashboard.php",
+                __DIR__ . "/pages/dashboard.php",
+            ];
 
-            if (is_file($mainPath)) {
-                include $mainPath;
-            } elseif (is_file($subPath)) {
-                include $subPath;
-            } elseif (is_file($rootPath) && basename($rootPath) !== 'layout.php') {
-                include $rootPath;
-            } elseif (is_file($dashboardPath)) {
-                include $dashboardPath;
-            } else {
+            $included = false;
+            foreach ($candidatePaths as $path) {
+                if (!is_file($path)) {
+                    continue;
+                }
+
+                if (basename($path) === 'layout.php') {
+                    continue;
+                }
+
+                include $path;
+                $included = true;
+                break;
+            }
+
+            if (!$included) {
                 echo '<div style="padding:16px;border:1px solid #e5e7eb;border-radius:10px;background:#fff">';
                 echo '<h2 style="margin:0 0 8px 0;font-size:20px;color:#111827">No page found</h2>';
-                echo '<p style="margin:0;color:#4b5563">Create `pages/dashboard.php` or add a page file under `pages/`.</p>';
+                echo '<p style="margin:0;color:#4b5563">Create `pages/dashboard.php` or add a page file under `pages/` or `pages/bns/`.</p>';
                 echo '</div>';
             }
             ?>

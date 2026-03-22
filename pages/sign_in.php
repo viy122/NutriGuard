@@ -1,55 +1,21 @@
 <?php
 session_start();
-
-// Redirect if already logged in
-if (isset($_SESSION['user'])) {
-  header('Location: dashboard.php');
-  exit;
-}
+require_once __DIR__ . '/../backend/auth.php';
 
 $error = '';
-
-// Demo accounts (fallback if users.json doesn't exist)
-$demoAccounts = [
-  'head@nutriguard.ph' => ['password' => 'head123', 'role' => 'head', 'name' => 'Health Center Head'],
-  'bhw@nutriguard.ph'  => ['password' => 'bhw123',  'role' => 'bhw',  'name' => 'BHW User'],
-  'bns@nutriguard.ph'  => ['password' => 'bns123',  'role' => 'bns',  'name' => 'BNS User'],
-];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $email    = trim($_POST['email'] ?? '');
   $password = $_POST['password'] ?? '';
 
-  $loggedIn = false;
+  $user = authenticateUser($email, $password);
 
-  // Check users.json first (registered via signup.php)
-  $usersFile = __DIR__ . '/users.json';
-  if (file_exists($usersFile)) {
-    $users = json_decode(file_get_contents($usersFile), true) ?? [];
-    foreach ($users as $user) {
-      if ($user['email'] === $email && password_verify($password, $user['password'])) {
-        $_SESSION['user'] = $user['email'];
-        $_SESSION['name'] = $user['name'];
-        $_SESSION['role'] = $user['role'];
-        $loggedIn = true;
-        break;
-      }
-    }
-  }
-
-  // Fallback: check demo accounts
-  if (!$loggedIn && isset($demoAccounts[$email]) && $demoAccounts[$email]['password'] === $password) {
-    $_SESSION['user'] = $email;
-    $_SESSION['name'] = $demoAccounts[$email]['name'];
-    $_SESSION['role'] = $demoAccounts[$email]['role'];
-    $loggedIn = true;
-  }
-
-  if ($loggedIn) {
+  if ($user !== null) {
+    loginUser($user);
     header('Location: ../layout.php?page=dashboard');
     exit;
   } else {
-    $error = 'Invalid email or password';
+    $error = 'Invalid email or password, or account is inactive.';
   }
 }
 ?>
@@ -132,16 +98,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           Sign In
         </button>
       </form>
-
-      <!-- Demo Accounts -->
-      <div class="mt-6 p-4 bg-gradient-to-br from-cyan-50 to-teal-50 rounded-lg border border-cyan-200">
-        <p class="text-xs text-gray-700 mb-2 font-medium">Demo Accounts:</p>
-        <div class="space-y-1 text-xs text-gray-600">
-          <div>Head: head@nutriguard.ph / head123</div>
-          <div>BHW: bhw@nutriguard.ph / bhw123</div>
-          <div>BNS: bns@nutriguard.ph / bns123</div>
-        </div>
-      </div>
 
       <!-- Sign Up Link -->
       <p class="text-center text-gray-600 text-sm mt-6">

@@ -377,15 +377,4 @@ aiData.forEach(f => {
 <?php
 $page_content = ob_get_clean();
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>BNS Dashboard – NutriGuard</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body style="margin:0;font-family:sans-serif;">
-  <?php include 'sidebar.php'; ?>
-</body>
-</html>
+<?= $page_content ?>

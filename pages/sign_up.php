@@ -1,12 +1,6 @@
 <?php
 session_start();
 
-// Redirect if already logged in
-if (isset($_SESSION['user'])) {
-  header('Location: ../layout.php?page=dashboard');
-  exit;
-}
-
 $error = '';
 $name  = '';
 $email = '';
