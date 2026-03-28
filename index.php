@@ -85,6 +85,7 @@
     <div class="flex items-center justify-center gap-4 mb-16">
       <a href="pages/sign_in.php" class="gradient-btn text-white px-8 py-4 rounded-lg text-lg font-medium shadow-lg transition-all">Get Started →</a>
       <a href="#features" class="border-2 border-gray-300 hover:border-gray-400 text-gray-700 px-8 py-4 rounded-lg text-lg font-medium transition-all">ⓘ Learn More</a>
+    </div>
 
     <!-- Stats -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">

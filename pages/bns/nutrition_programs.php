@@ -1,5 +1,7 @@
 <?php
-session_start();
+if (session_status() !== PHP_SESSION_ACTIVE) {
+  session_start();
+}
 if (!isset($_SESSION['user'])) {
   header('Location: login.php');
   exit;
@@ -554,15 +556,4 @@ document.getElementById('program-modal').addEventListener('click', function(e) {
 <?php
 $page_content = ob_get_clean();
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Nutrition Programs – NutriGuard</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body style="margin:0;font-family:sans-serif;">
-  <?php include 'sidebar.php'; ?>
-</body>
-</html>
+<?= $page_content ?>

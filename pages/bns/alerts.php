@@ -1,5 +1,7 @@
 <?php
-session_start();
+if (session_status() !== PHP_SESSION_ACTIVE) {
+  session_start();
+}
 if (!isset($_SESSION['user'])) {
   header('Location: login.php');
   exit;
@@ -375,7 +377,5 @@ renderTable();
 
 <?php
 $page_content = ob_get_clean();
-include 'sidebar.php';
 ?>
-</body>
-</html>
+<?= $page_content ?>

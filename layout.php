@@ -1,23 +1,30 @@
 <?php
-$page = isset($_GET['page']) ? $_GET['page'] : 'dashboard';
-$validPages = ['dashboard', 'login'];
+require_once __DIR__ . '/backend/auth.php';
 
-$bnsPages = [];
-$bnsPageFiles = glob(__DIR__ . '/pages/bns/*.php') ?: [];
-foreach ($bnsPageFiles as $file) {
-    $bnsPages[] = pathinfo($file, PATHINFO_FILENAME);
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
 }
 
-$topLevelPages = [];
-$topLevelPageFiles = glob(__DIR__ . '/pages/*.php') ?: [];
-foreach ($topLevelPageFiles as $file) {
-    $topLevelPages[] = pathinfo($file, PATHINFO_FILENAME);
+if (!isset($_SESSION['user_id'])) {
+    header('Location: pages/sign_in.php');
+    exit;
 }
 
-// Add your task step pages to the whitelist
-$taskStepPages = [];
+$page = $_GET['page'] ?? 'dashboard';
+$role = normalizeRoleCode((string) ($_SESSION['role'] ?? ''));
+$validRoles = ['bns', 'bhw', 'hc_head'];
 
-if (!in_array($page, array_merge($validPages, $taskStepPages, $bnsPages, $topLevelPages), true)) {
+if (!in_array($role, $validRoles, true)) {
+    $role = 'bns';
+}
+
+$rolePages = [];
+$rolePageFiles = glob(__DIR__ . '/pages/' . $role . '/*.php') ?: [];
+foreach ($rolePageFiles as $file) {
+    $rolePages[] = pathinfo($file, PATHINFO_FILENAME);
+}
+
+if (!in_array($page, $rolePages, true)) {
     $page = 'dashboard';
 }
 ?>
@@ -27,6 +34,8 @@ if (!in_array($page, array_merge($validPages, $taskStepPages, $bnsPages, $topLev
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NUTRI-GUARD</title>
+
+    <link rel="stylesheet" href="src/output.css" />
 
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet" />
@@ -48,6 +57,7 @@ if (!in_array($page, array_merge($validPages, $taskStepPages, $bnsPages, $topLev
             flex-grow: 1;
             background-color: #fff;
             padding: 1.5rem;
+            overflow-x: auto;
         }
 
         .nav-link.active {
@@ -88,12 +98,10 @@ if (!in_array($page, array_merge($validPages, $taskStepPages, $bnsPages, $topLev
 
 <div class="layout-wrapper">
     <?php
-    $navbarInclude = file_exists(__DIR__ . '/components/navbar.php')
-        ? __DIR__ . '/components/navbar.php'
-        : __DIR__ . '/includes/navbar.php';
+    $sidebarInclude = __DIR__ . '/components/sidebar.php';
 
-    if (file_exists($navbarInclude)) {
-        include $navbarInclude;
+    if (file_exists($sidebarInclude)) {
+        include $sidebarInclude;
     }
     ?>
 
@@ -119,11 +127,10 @@ if (!in_array($page, array_merge($validPages, $taskStepPages, $bnsPages, $topLev
             <?php
             // Use absolute paths to avoid include warnings from working-directory issues.
             $candidatePaths = [
-                __DIR__ . "/pages/{$page}.php",
-                __DIR__ . "/pages/bns/{$page}.php",
+                __DIR__ . "/pages/{$role}/{$page}.php",
                 __DIR__ . "/pages/task_steps/{$page}.php",
                 __DIR__ . "/{$page}.php",
-                __DIR__ . "/pages/bns/dashboard.php",
+                __DIR__ . "/pages/{$role}/dashboard.php",
                 __DIR__ . "/pages/dashboard.php",
             ];
 
